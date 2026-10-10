@@ -1,0 +1,46 @@
+name: UltraRed - Primeiro Teste (sem ROM)
+
+on:
+  push:
+    branches: [master, main, starter-kit-v1]
+    paths:
+      - 'src/config.h'
+      - 'scripts/**'
+      - 'tools/starter_check.py'
+      - '.github/workflows/starter-check.yml'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    name: Conferir arquivos e configuracoes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Executar teste
+        run: python3 tools/starter_check.py --report "$RUNNER_TEMP/ultrared-report.md"
+      - name: Exibir relatorio
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/ultrared-report.md" ]; then
+            cat "$RUNNER_TEMP/ultrared-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'O relatorio nao foi criado.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Baixar relatorio
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultrared-primeiro-teste
+          path: ${{ runner.temp }}/ultrared-report.md
+          if-no-files-found: warn
+          retention-days: 7
